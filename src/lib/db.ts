@@ -58,12 +58,21 @@ export async function insertArticle(article: Omit<Article, "id" | "fetched_at">)
     await sql`
       INSERT INTO articles (title, url, summary, source_name, platform, impact_level, published_at)
       VALUES (${article.title}, ${article.url}, ${article.summary}, ${article.source_name}, ${article.platform}, ${article.impact_level}, ${article.published_at})
-      ON CONFLICT (url) DO NOTHING
+      ON CONFLICT (url) DO UPDATE SET impact_level = ${article.impact_level}
     `;
     return true;
   } catch {
     return false;
   }
+}
+
+export async function getAllArticlesForReclassify(): Promise<{ id: number; title: string; summary: string }[]> {
+  const result = await sql`SELECT id, title, summary FROM articles`;
+  return result.rows as { id: number; title: string; summary: string }[];
+}
+
+export async function updateArticleImpact(id: number, impactLevel: ImpactLevel) {
+  await sql`UPDATE articles SET impact_level = ${impactLevel} WHERE id = ${id}`;
 }
 
 export async function getArticles({

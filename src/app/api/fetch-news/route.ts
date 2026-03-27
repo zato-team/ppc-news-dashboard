@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createTables } from "@/lib/db";
-import { fetchAllFeeds } from "@/lib/fetcher";
+import { fetchAllFeeds, reclassifyAllArticles } from "@/lib/fetcher";
 
 export const maxDuration = 60;
 
@@ -18,12 +18,16 @@ export async function GET(request: NextRequest) {
     // Ensure tables exist
     await createTables();
 
+    // Reclassify existing articles with updated impact detection
+    const reclassified = await reclassifyAllArticles();
+
     // Fetch all feeds
     const result = await fetchAllFeeds();
 
     return NextResponse.json({
       success: true,
       ...result,
+      reclassified,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

@@ -8,7 +8,7 @@ import {
   type ImpactLevel,
   type FeedSource,
 } from "./sources";
-import { insertArticle } from "./db";
+import { insertArticle, getAllArticlesForReclassify, updateArticleImpact } from "./db";
 
 const parser = new Parser({
   timeout: 10000,
@@ -148,4 +148,18 @@ export async function fetchAllFeeds(): Promise<{
   }
 
   return { inserted, skipped, errors };
+}
+
+// Reclassify all existing articles based on their title + summary
+export async function reclassifyAllArticles(): Promise<number> {
+  const articles = await getAllArticlesForReclassify();
+  let updated = 0;
+
+  for (const article of articles) {
+    const newLevel = detectImpactLevel(article.title, article.summary);
+    await updateArticleImpact(article.id, newLevel);
+    updated++;
+  }
+
+  return updated;
 }
