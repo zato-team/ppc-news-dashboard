@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --google-blue: #4285F4;
+  --microsoft-blue: #00A4EF;
+  --merchant-green: #34A853;
+}
+
+body {
+  background: #f8fafc;
+}
