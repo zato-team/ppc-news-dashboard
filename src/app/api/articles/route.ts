@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArticles, getArticleCount } from "@/lib/db";
+import { getArticles, getArticleCount, createTables } from "@/lib/db";
 import type { Platform, ImpactLevel } from "@/lib/sources";
 
 export async function GET(request: NextRequest) {
@@ -14,6 +14,9 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0", 10);
 
   try {
+    // Ensure tables + migration have run before querying
+    await createTables();
+
     const [articles, total] = await Promise.all([
       getArticles({ platform: platform || undefined, impactLevel: impactLevel || undefined, search, startDate, endDate, limit, offset }),
       getArticleCount({ platform: platform || undefined, impactLevel: impactLevel || undefined, startDate, endDate }),

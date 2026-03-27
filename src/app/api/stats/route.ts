@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { getStats } from "@/lib/db";
+import { getStats, createTables } from "@/lib/db";
 
 export async function GET() {
   try {
+    await createTables();
     const stats = await getStats();
     return NextResponse.json(stats);
   } catch (error) {
