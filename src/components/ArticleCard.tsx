@@ -58,7 +58,8 @@ export default function ArticleCard({ article }: { article: Article }) {
 
   return (
     <article
-      className={`rounded-xl p-5 shadow-sm transition-all hover:shadow-md ${
+      id={`article-${article.id}`}
+      className={`rounded-xl px-7 py-6 shadow-sm transition-all hover:shadow-md ${
         isHighImpact ? "ring-2" : "border"
       }`}
       style={{
@@ -67,23 +68,23 @@ export default function ArticleCard({ article }: { article: Article }) {
         ...(isHighImpact ? { ringColor: impactColor } : {}),
       }}
     >
-      <div className="flex items-start justify-between gap-4">
-        {/* Impact indicator bar on left */}
+      <div className="flex items-start justify-between gap-5">
+        {/* Impact indicator bar on left — taller for bigger card */}
         <div
           className="flex-shrink-0 w-1.5 self-stretch rounded-full mt-0.5"
-          style={{ backgroundColor: impactColor }}
+          style={{ backgroundColor: impactColor, minHeight: "80px" }}
         />
 
         <div className="flex-1 min-w-0">
           {/* Badges row */}
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-2.5 mb-3 flex-wrap">
             {/* Impact badge */}
             <span
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
               style={{
                 backgroundColor: impactBg,
                 color: impactColor,
-                border: `1px solid ${impactBorder}`,
+                border: `1.5px solid ${impactBorder}`,
               }}
             >
               <span className="text-[10px] font-black">{impactIcon}</span>
@@ -92,7 +93,7 @@ export default function ArticleCard({ article }: { article: Article }) {
 
             {/* Platform badge */}
             <span
-              className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold text-white"
+              className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white"
               style={{ backgroundColor: platformColor }}
             >
               {platformLabel}
@@ -105,35 +106,59 @@ export default function ArticleCard({ article }: { article: Article }) {
             </span>
           </div>
 
-          {/* Title */}
+          {/* Title — 35% larger (text-xl instead of text-base) */}
           <a
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`block text-base font-semibold hover:text-blue-600 transition-colors mb-2 line-clamp-2 ${
+            className={`block text-xl font-semibold hover:text-blue-600 transition-colors mb-3 line-clamp-2 leading-snug ${
               isHighImpact ? "text-red-900" : "text-slate-900"
             }`}
           >
             {article.title}
           </a>
 
-          {/* Summary */}
-          <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">
+          {/* Summary — 35% larger (text-base instead of text-sm), more lines visible */}
+          <p className="text-base text-slate-500 leading-relaxed line-clamp-4">
             {article.summary}
           </p>
+
+          {/* Read more link */}
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Read full article
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
         </div>
 
-        {/* External link icon */}
+        {/* External link icon — larger */}
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-shrink-0 p-2 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-blue-500 transition-colors"
+          className="flex-shrink-0 p-2.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-500 transition-colors"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
+            width="22"
+            height="22"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
