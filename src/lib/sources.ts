@@ -1,4 +1,5 @@
 export type Platform = "google-ads" | "microsoft-ads" | "merchant-center";
+export type ImpactLevel = "action-required" | "may-impact" | "good-to-know";
 
 export interface FeedSource {
   name: string;
@@ -103,3 +104,118 @@ export const PLATFORM_COLORS: Record<Platform, string> = {
   "microsoft-ads": "#00A4EF",
   "merchant-center": "#34A853",
 };
+
+// --- Impact Level System ---
+
+export const IMPACT_LABELS: Record<ImpactLevel, string> = {
+  "action-required": "Action Required",
+  "may-impact": "May Impact",
+  "good-to-know": "Good to Know",
+};
+
+export const IMPACT_COLORS: Record<ImpactLevel, string> = {
+  "action-required": "#DC2626",
+  "may-impact": "#D97706",
+  "good-to-know": "#16A34A",
+};
+
+export const IMPACT_BG_COLORS: Record<ImpactLevel, string> = {
+  "action-required": "#FEF2F2",
+  "may-impact": "#FFFBEB",
+  "good-to-know": "#F0FDF4",
+};
+
+export const IMPACT_BORDER_COLORS: Record<ImpactLevel, string> = {
+  "action-required": "#FECACA",
+  "may-impact": "#FDE68A",
+  "good-to-know": "#BBF7D0",
+};
+
+export const IMPACT_SORT_ORDER: Record<ImpactLevel, number> = {
+  "action-required": 0,
+  "may-impact": 1,
+  "good-to-know": 2,
+};
+
+// Keywords that signal HIGH impact (action-required)
+// These are changes that break things, deprecate features, or require immediate action
+export const HIGH_IMPACT_KEYWORDS: string[] = [
+  "deprecat",
+  "sunset",
+  "discontinu",
+  "breaking change",
+  "migration required",
+  "must update",
+  "action required",
+  "mandatory",
+  "deadline",
+  "enforce",
+  "policy change",
+  "policy update",
+  "will be removed",
+  "no longer support",
+  "no longer available",
+  "will stop",
+  "shutting down",
+  "end of life",
+  "required by",
+  "comply",
+  "compliance",
+  "account suspension",
+  "disapproval",
+  "disapproved",
+  "violation",
+  "api v",
+  "api version",
+  "upgrade required",
+  "migrate",
+  "data loss",
+  "immediately",
+];
+
+// Keywords that signal MEDIUM impact (may-impact)
+// These are significant changes that could affect strategy or performance
+export const MEDIUM_IMPACT_KEYWORDS: string[] = [
+  "new feature",
+  "now available",
+  "rolling out",
+  "beta",
+  "alpha",
+  "pilot",
+  "launching",
+  "launch",
+  "algorithm",
+  "bidding change",
+  "bidding update",
+  "smart bidding",
+  "broad match",
+  "match type",
+  "audience",
+  "targeting change",
+  "attribution",
+  "conversion tracking",
+  "reporting change",
+  "new report",
+  "new metric",
+  "interface change",
+  "ui update",
+  "redesign",
+  "performance max",
+  "pmax update",
+  "demand gen",
+  "new campaign type",
+  "automation",
+  "auto-apply",
+  "recommendations",
+  "expanded",
+  "reduced",
+  "increased limit",
+  "shopping update",
+  "feed requirement",
+  "product listing",
+  "free listing",
+  "merchant update",
+  "copilot",
+  "ai-powered",
+  "generative",
+];

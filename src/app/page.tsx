@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import StatsBar from "@/components/StatsBar";
 import FilterBar from "@/components/FilterBar";
 import ArticleCard from "@/components/ArticleCard";
-import type { Platform } from "@/lib/sources";
+import type { Platform, ImpactLevel } from "@/lib/sources";
 
 interface Article {
   id: number;
@@ -13,6 +13,7 @@ interface Article {
   summary: string;
   source_name: string;
   platform: Platform;
+  impact_level: ImpactLevel;
   published_at: string;
 }
 
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [platform, setPlatform] = useState<Platform | "all">("all");
+  const [impactLevel, setImpactLevel] = useState<ImpactLevel | "all">("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState("30");
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ export default function Dashboard() {
 
       const params = new URLSearchParams();
       if (platform !== "all") params.set("platform", platform);
+      if (impactLevel !== "all") params.set("impactLevel", impactLevel);
       if (search) params.set("search", search);
       if (dateRange !== "all") {
         const start = new Date();
@@ -73,7 +76,7 @@ export default function Dashboard() {
       }
       setLoading(false);
     },
-    [platform, search, dateRange, offset]
+    [platform, impactLevel, search, dateRange, offset]
   );
 
   const fetchStats = useCallback(async () => {
@@ -92,7 +95,7 @@ export default function Dashboard() {
     fetchArticles(true);
     fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [platform, dateRange]);
+  }, [platform, dateRange, impactLevel]);
 
   // Debounced search
   useEffect(() => {
@@ -128,6 +131,11 @@ export default function Dashboard() {
     }
     setFetching(false);
   };
+
+  // Count articles by impact level for the summary banner
+  const actionRequiredCount = articles.filter(
+    (a) => a.impact_level === "action-required"
+  ).length;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -204,10 +212,42 @@ export default function Dashboard() {
         ) : (
           <>
             <StatsBar stats={stats} />
+
+            {/* Action Required alert banner */}
+            {actionRequiredCount > 0 && impactLevel === "all" && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg font-black">!</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-red-900 font-semibold text-sm">
+                    {actionRequiredCount} Action Required{" "}
+                    {actionRequiredCount === 1 ? "update" : "updates"} in your
+                    current view
+                  </p>
+                  <p className="text-red-700 text-xs mt-0.5">
+                    These changes may affect account performance and need your
+                    attention.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setImpactLevel("action-required")}
+                  className="flex-shrink-0 px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Show Only
+                </button>
+              </div>
+            )}
+
             <FilterBar
               platform={platform}
               onPlatformChange={(p) => {
                 setPlatform(p);
+                setOffset(0);
+              }}
+              impactLevel={impactLevel}
+              onImpactLevelChange={(i) => {
+                setImpactLevel(i);
                 setOffset(0);
               }}
               search={search}

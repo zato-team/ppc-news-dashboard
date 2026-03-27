@@ -1,6 +1,13 @@
 import { Resend } from "resend";
 import { getWeeklyArticles, type Article } from "./db";
-import { PLATFORM_LABELS, PLATFORM_COLORS, type Platform } from "./sources";
+import {
+  PLATFORM_LABELS,
+  PLATFORM_COLORS,
+  IMPACT_LABELS,
+  IMPACT_COLORS,
+  type Platform,
+  type ImpactLevel,
+} from "./sources";
 import { format } from "date-fns";
 
 function getResend() {
@@ -18,9 +25,24 @@ function groupByPlatform(articles: Article[]): Record<string, Article[]> {
   return groups;
 }
 
+function impactBadgeHtml(level: ImpactLevel): string {
+  const color = IMPACT_COLORS[level];
+  const label = IMPACT_LABELS[level];
+  const bgMap: Record<ImpactLevel, string> = {
+    "action-required": "#FEF2F2",
+    "may-impact": "#FFFBEB",
+    "good-to-know": "#F0FDF4",
+  };
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;color:${color};background:${bgMap[level]};border:1px solid ${color}30;margin-right:6px;">${label}</span>`;
+}
+
 function buildEmailHtml(articles: Article[]): string {
   const grouped = groupByPlatform(articles);
   const weekOf = format(new Date(), "MMM d, yyyy");
+
+  const actionRequired = articles.filter(
+    (a) => a.impact_level === "action-required"
+  );
 
   let html = `
     <!DOCTYPE html>
@@ -31,6 +53,8 @@ function buildEmailHtml(articles: Article[]): string {
         .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 32px; border-radius: 12px; margin-bottom: 24px; }
         .header h1 { margin: 0 0 8px 0; font-size: 24px; }
         .header p { margin: 0; opacity: 0.8; font-size: 14px; }
+        .alert-section { background: #FEF2F2; border: 2px solid #FECACA; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .alert-title { font-size: 16px; font-weight: 700; color: #DC2626; margin: 0 0 12px 0; }
         .platform-section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
         .platform-title { font-size: 18px; font-weight: 700; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 3px solid; }
         .article { padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
@@ -58,7 +82,35 @@ function buildEmailHtml(articles: Article[]): string {
     `;
   }
 
-  const platformOrder: Platform[] = ["google-ads", "microsoft-ads", "merchant-center"];
+  // Action Required section at the top if any exist
+  if (actionRequired.length > 0) {
+    html += `
+      <div class="alert-section">
+        <h2 class="alert-title">&#9888; ${actionRequired.length} Action Required Update${actionRequired.length > 1 ? "s" : ""}</h2>
+    `;
+    for (const article of actionRequired) {
+      const date = format(new Date(article.published_at), "MMM d, yyyy");
+      const platformLabel = PLATFORM_LABELS[article.platform as Platform];
+      html += `
+        <div class="article">
+          <div class="article-title">
+            ${impactBadgeHtml("action-required")}
+            <a href="${article.url}">${article.title}</a>
+          </div>
+          <div class="article-meta">${platformLabel} &bull; ${article.source_name} &bull; ${date}</div>
+          <div class="article-summary">${article.summary}</div>
+        </div>
+      `;
+    }
+    html += `</div>`;
+  }
+
+  // Regular platform sections
+  const platformOrder: Platform[] = [
+    "google-ads",
+    "microsoft-ads",
+    "merchant-center",
+  ];
   for (const platform of platformOrder) {
     const items = grouped[platform];
     if (!items || items.length === 0) continue;
@@ -75,9 +127,13 @@ function buildEmailHtml(articles: Article[]): string {
 
     for (const article of items) {
       const date = format(new Date(article.published_at), "MMM d, yyyy");
+      const impact = (article.impact_level || "good-to-know") as ImpactLevel;
       html += `
         <div class="article">
-          <div class="article-title"><a href="${article.url}">${article.title}</a></div>
+          <div class="article-title">
+            ${impactBadgeHtml(impact)}
+            <a href="${article.url}">${article.title}</a>
+          </div>
           <div class="article-meta">${article.source_name} &bull; ${date}</div>
           <div class="article-summary">${article.summary}</div>
         </div>
@@ -104,10 +160,16 @@ export async function sendWeeklyDigest() {
   const html = buildEmailHtml(articles);
   const weekOf = format(new Date(), "MMM d");
 
+  const actionCount = articles.filter(
+    (a) => a.impact_level === "action-required"
+  ).length;
+  const subjectPrefix =
+    actionCount > 0 ? `[${actionCount} ACTION REQUIRED] ` : "";
+
   const { data, error } = await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL || "PPC News <noreply@resend.dev>",
     to: [process.env.DIGEST_EMAIL || "info@zatomarketing.com"],
-    subject: `PPC News Digest — Week of ${weekOf} (${articles.length} updates)`,
+    subject: `${subjectPrefix}PPC News Digest — Week of ${weekOf} (${articles.length} updates)`,
     html,
   });
 

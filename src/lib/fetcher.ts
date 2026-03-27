@@ -1,5 +1,13 @@
 import Parser from "rss-parser";
-import { FEED_SOURCES, PLATFORM_KEYWORDS, type Platform, type FeedSource } from "./sources";
+import {
+  FEED_SOURCES,
+  PLATFORM_KEYWORDS,
+  HIGH_IMPACT_KEYWORDS,
+  MEDIUM_IMPACT_KEYWORDS,
+  type Platform,
+  type ImpactLevel,
+  type FeedSource,
+} from "./sources";
 import { insertArticle } from "./db";
 
 const parser = new Parser({
@@ -60,6 +68,25 @@ function detectPlatform(
   return null; // Not relevant — skip this article
 }
 
+function detectImpactLevel(title: string, content: string): ImpactLevel {
+  const combined = `${title} ${content}`.toLowerCase();
+
+  // Check for high-impact keywords first
+  const highMatches = HIGH_IMPACT_KEYWORDS.filter((kw) => combined.includes(kw));
+  if (highMatches.length >= 1) {
+    return "action-required";
+  }
+
+  // Check for medium-impact keywords
+  const mediumMatches = MEDIUM_IMPACT_KEYWORDS.filter((kw) => combined.includes(kw));
+  if (mediumMatches.length >= 1) {
+    return "may-impact";
+  }
+
+  // Default: informational
+  return "good-to-know";
+}
+
 export async function fetchAllFeeds(): Promise<{
   inserted: number;
   skipped: number;
@@ -91,6 +118,8 @@ export async function fetchAllFeeds(): Promise<{
           item.contentSnippet || item.content || item.summary
         );
 
+        const impactLevel = detectImpactLevel(item.title, content);
+
         const publishedAt = item.pubDate
           ? new Date(item.pubDate).toISOString()
           : new Date().toISOString();
@@ -101,6 +130,7 @@ export async function fetchAllFeeds(): Promise<{
           summary,
           source_name: source.name,
           platform,
+          impact_level: impactLevel,
           published_at: publishedAt,
         });
 

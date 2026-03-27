@@ -1,5 +1,5 @@
 import { sql } from "@vercel/postgres";
-import type { Platform } from "./sources";
+import type { Platform, ImpactLevel } from "./sources";
 
 export interface Article {
   id: number;
@@ -8,6 +8,7 @@ export interface Article {
   summary: string;
   source_name: string;
   platform: Platform;
+  impact_level: ImpactLevel;
   published_at: string;
   fetched_at: string;
 }
@@ -21,6 +22,7 @@ export async function createTables() {
       summary TEXT NOT NULL,
       source_name TEXT NOT NULL,
       platform TEXT NOT NULL,
+      impact_level TEXT NOT NULL DEFAULT 'good-to-know',
       published_at TIMESTAMPTZ NOT NULL,
       fetched_at TIMESTAMPTZ DEFAULT NOW()
     )
@@ -32,13 +34,23 @@ export async function createTables() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published_at DESC)
   `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_articles_impact ON articles(impact_level)
+  `;
+
+  // Add impact_level column if it doesn't exist (migration for existing tables)
+  try {
+    await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS impact_level TEXT NOT NULL DEFAULT 'good-to-know'`;
+  } catch {
+    // Column already exists — safe to ignore
+  }
 }
 
 export async function insertArticle(article: Omit<Article, "id" | "fetched_at">) {
   try {
     await sql`
-      INSERT INTO articles (title, url, summary, source_name, platform, published_at)
-      VALUES (${article.title}, ${article.url}, ${article.summary}, ${article.source_name}, ${article.platform}, ${article.published_at})
+      INSERT INTO articles (title, url, summary, source_name, platform, impact_level, published_at)
+      VALUES (${article.title}, ${article.url}, ${article.summary}, ${article.source_name}, ${article.platform}, ${article.impact_level}, ${article.published_at})
       ON CONFLICT (url) DO NOTHING
     `;
     return true;
@@ -54,6 +66,7 @@ export async function getArticles({
   startDate,
   endDate,
   search,
+  impactLevel,
 }: {
   platform?: Platform;
   limit?: number;
@@ -61,6 +74,7 @@ export async function getArticles({
   startDate?: string;
   endDate?: string;
   search?: string;
+  impactLevel?: ImpactLevel;
 } = {}) {
   // Build dynamic query
   let query = `SELECT * FROM articles WHERE 1=1`;
@@ -70,6 +84,10 @@ export async function getArticles({
   if (platform) {
     query += ` AND platform = $${paramIndex++}`;
     params.push(platform);
+  }
+  if (impactLevel) {
+    query += ` AND impact_level = $${paramIndex++}`;
+    params.push(impactLevel);
   }
   if (startDate) {
     query += ` AND published_at >= $${paramIndex++}`;
@@ -85,7 +103,9 @@ export async function getArticles({
     paramIndex++;
   }
 
-  query += ` ORDER BY published_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+  // Sort: action-required first, then may-impact, then good-to-know, then by date
+  query += ` ORDER BY CASE impact_level WHEN 'action-required' THEN 0 WHEN 'may-impact' THEN 1 ELSE 2 END, published_at DESC`;
+  query += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
   params.push(limit, offset);
 
   const result = await sql.query(query, params);
@@ -96,10 +116,12 @@ export async function getArticleCount({
   platform,
   startDate,
   endDate,
+  impactLevel,
 }: {
   platform?: Platform;
   startDate?: string;
   endDate?: string;
+  impactLevel?: ImpactLevel;
 } = {}) {
   let query = `SELECT COUNT(*) as count FROM articles WHERE 1=1`;
   const params: string[] = [];
@@ -108,6 +130,10 @@ export async function getArticleCount({
   if (platform) {
     query += ` AND platform = $${paramIndex++}`;
     params.push(platform);
+  }
+  if (impactLevel) {
+    query += ` AND impact_level = $${paramIndex++}`;
+    params.push(impactLevel);
   }
   if (startDate) {
     query += ` AND published_at >= $${paramIndex++}`;
@@ -152,7 +178,19 @@ export async function getWeeklyArticles() {
   const result = await sql`
     SELECT * FROM articles
     WHERE published_at >= NOW() - INTERVAL '7 days'
-    ORDER BY platform, published_at DESC
+    ORDER BY CASE impact_level WHEN 'action-required' THEN 0 WHEN 'may-impact' THEN 1 ELSE 2 END, platform, published_at DESC
   `;
   return result.rows as Article[];
+}
+
+export async function getImpactStats() {
+  const result = await sql`
+    SELECT impact_level, COUNT(*) as count
+    FROM articles
+    WHERE published_at >= NOW() - INTERVAL '30 days'
+    GROUP BY impact_level
+  `;
+  return Object.fromEntries(
+    result.rows.map((r) => [r.impact_level, parseInt(r.count, 10)])
+  ) as Record<string, number>;
 }
