@@ -22,7 +22,7 @@ export async function createTables() {
       summary TEXT NOT NULL,
       source_name TEXT NOT NULL,
       platform TEXT NOT NULL,
-      impact_level TEXT NOT NULL DEFAULT 'good-to-know',
+      impact_level TEXT DEFAULT 'good-to-know',
       published_at TIMESTAMPTZ NOT NULL,
       fetched_at TIMESTAMPTZ DEFAULT NOW()
     )
@@ -34,16 +34,23 @@ export async function createTables() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published_at DESC)
   `;
+
+  // Migration: add impact_level column to existing tables that don't have it
+  // Use a check to see if the column exists first, then add it without NOT NULL
+  // constraint (which would fail on existing rows)
+  const colCheck = await sql`
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name = 'articles' AND column_name = 'impact_level'
+  `;
+
+  if (colCheck.rows.length === 0) {
+    await sql`ALTER TABLE articles ADD COLUMN impact_level TEXT DEFAULT 'good-to-know'`;
+    await sql`UPDATE articles SET impact_level = 'good-to-know' WHERE impact_level IS NULL`;
+  }
+
   await sql`
     CREATE INDEX IF NOT EXISTS idx_articles_impact ON articles(impact_level)
   `;
-
-  // Add impact_level column if it doesn't exist (migration for existing tables)
-  try {
-    await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS impact_level TEXT NOT NULL DEFAULT 'good-to-know'`;
-  } catch {
-    // Column already exists — safe to ignore
-  }
 }
 
 export async function insertArticle(article: Omit<Article, "id" | "fetched_at">) {
