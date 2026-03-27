@@ -1,5 +1,14 @@
 export type Platform = "google-ads" | "microsoft-ads" | "merchant-center";
 export type ImpactLevel = "action-required" | "may-impact" | "good-to-know";
+export type ArticleCategory =
+  | "google-merchant-center"
+  | "search-network"
+  | "shopping-ads"
+  | "pmax"
+  | "dgen-display"
+  | "youtube-ads"
+  | "general-settings"
+  | "general-platform";
 
 export interface FeedSource {
   name: string;
@@ -136,6 +145,171 @@ export const IMPACT_SORT_ORDER: Record<ImpactLevel, number> = {
   "may-impact": 1,
   "good-to-know": 2,
 };
+
+// --- Article Category System ---
+
+export const CATEGORY_ORDER: ArticleCategory[] = [
+  "google-merchant-center",
+  "search-network",
+  "shopping-ads",
+  "pmax",
+  "dgen-display",
+  "youtube-ads",
+  "general-settings",
+  "general-platform",
+];
+
+export const CATEGORY_LABELS: Record<ArticleCategory, string> = {
+  "google-merchant-center": "Google Merchant Center",
+  "search-network": "Search Network",
+  "shopping-ads": "Shopping Ads",
+  "pmax": "PMax",
+  "dgen-display": "DGen & Display (GDN)",
+  "youtube-ads": "YouTube Ads",
+  "general-settings": "General Settings Updates",
+  "general-platform": "General Platform Updates",
+};
+
+export const CATEGORY_ICONS: Record<ArticleCategory, string> = {
+  "google-merchant-center": "🛒",
+  "search-network": "🔍",
+  "shopping-ads": "🛍️",
+  "pmax": "⚡",
+  "dgen-display": "📺",
+  "youtube-ads": "▶️",
+  "general-settings": "⚙️",
+  "general-platform": "📢",
+};
+
+export const CATEGORY_KEYWORDS: Record<ArticleCategory, string[]> = {
+  "google-merchant-center": [
+    "merchant center",
+    "google merchant",
+    "product feed",
+    "shopping feed",
+    "free listing",
+    "product data",
+    "merchant center next",
+    "product approval",
+    "feed specification",
+    "feed rules",
+    "supplemental feed",
+  ],
+  "search-network": [
+    "search ads",
+    "search campaign",
+    "responsive search",
+    "text ad",
+    "search term",
+    "search query",
+    "keyword",
+    "broad match",
+    "phrase match",
+    "exact match",
+    "search partner",
+    "search network",
+    "ad copy",
+    "ad extension",
+    "sitelink",
+    "callout",
+    "structured snippet",
+  ],
+  "shopping-ads": [
+    "shopping ads",
+    "shopping campaign",
+    "product listing",
+    "google shopping",
+    "shopping tab",
+    "comparison shopping",
+    "css",
+    "product group",
+    "shopping actions",
+  ],
+  "pmax": [
+    "performance max",
+    "pmax",
+    "p-max",
+    "asset group",
+    "auto-created asset",
+    "url expansion",
+    "final url expansion",
+  ],
+  "dgen-display": [
+    "demand gen",
+    "demand generation",
+    "dgen",
+    "display network",
+    "display ad",
+    "gdn",
+    "discovery ad",
+    "discovery campaign",
+    "responsive display",
+    "display campaign",
+    "gmail ad",
+    "banner ad",
+    "image ad",
+  ],
+  "youtube-ads": [
+    "youtube",
+    "video ad",
+    "video campaign",
+    "video action",
+    "trueview",
+    "bumper ad",
+    "skippable",
+    "non-skippable",
+    "in-stream",
+    "video reach",
+    "shorts ad",
+    "youtube shorts",
+  ],
+  "general-settings": [
+    "account setting",
+    "billing",
+    "payment",
+    "access",
+    "permission",
+    "mcc",
+    "manager account",
+    "conversion tracking",
+    "conversion setting",
+    "attribution",
+    "auto-apply",
+    "recommendation",
+    "optimization score",
+    "account structure",
+    "api change",
+    "api version",
+    "editor",
+    "scripts",
+    "automated rule",
+    "label",
+  ],
+  "general-platform": [],  // Fallback — catches everything else
+};
+
+export function detectCategory(title: string, summary: string, platform: Platform): ArticleCategory {
+  const combined = `${title} ${summary}`.toLowerCase();
+
+  // Merchant Center platform articles default to that category
+  if (platform === "merchant-center") {
+    // But check if it's specifically about Shopping Ads
+    const isShoppingAds = CATEGORY_KEYWORDS["shopping-ads"].some((kw) => combined.includes(kw));
+    if (isShoppingAds) return "shopping-ads";
+    return "google-merchant-center";
+  }
+
+  // Check each category (in order) by keywords
+  for (const cat of CATEGORY_ORDER) {
+    if (cat === "general-platform") continue; // fallback, check last
+    const keywords = CATEGORY_KEYWORDS[cat];
+    if (keywords.some((kw) => combined.includes(kw))) {
+      return cat;
+    }
+  }
+
+  return "general-platform";
+}
 
 // Keywords that signal HIGH impact (action-required)
 // These are changes that break things, deprecate features, or require immediate action

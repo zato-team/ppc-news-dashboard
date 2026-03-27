@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import StatsBar from "@/components/StatsBar";
 import FilterBar from "@/components/FilterBar";
-import ArticleCard from "@/components/ArticleCard";
-import QuickScan from "@/components/QuickScan";
+import TimelineChart from "@/components/TimelineChart";
+import CategorySection from "@/components/CategorySection";
 import type { Platform, ImpactLevel } from "@/lib/sources";
 
 interface Article {
@@ -52,7 +52,7 @@ export default function Dashboard() {
         start.setDate(start.getDate() - parseInt(dateRange));
         params.set("startDate", start.toISOString());
       }
-      params.set("limit", "30");
+      params.set("limit", "50");
       params.set("offset", String(currentOffset));
 
       try {
@@ -260,7 +260,14 @@ export default function Dashboard() {
               }}
             />
 
-            {/* Articles */}
+            {/* Timeline Chart */}
+            <TimelineChart
+              dateRange={dateRange}
+              platform={platform}
+              impactLevel={impactLevel}
+            />
+
+            {/* Articles by Category */}
             {loading ? (
               <div className="space-y-4">
                 {[...Array(5)].map((_, i) => (
@@ -287,42 +294,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                {/* Quick Scan — clickable bullet summary at top */}
-                <QuickScan articles={articles} />
-
-                {/* Details section header */}
-                <div
-                  id="details-section"
-                  className="flex items-center gap-3 mb-4 mt-2"
-                >
-                  <div className="h-px flex-1 bg-slate-200" />
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="16" x2="12" y2="12" />
-                      <line x1="12" y1="8" x2="12.01" y2="8" />
-                    </svg>
-                    Full Details
-                  </h3>
-                  <div className="h-px flex-1 bg-slate-200" />
-                </div>
-
-                {/* Full article cards */}
-                <div className="space-y-5">
-                  {articles.map((article) => (
-                    <ArticleCard key={article.id} article={article} />
-                  ))}
-                </div>
+                <CategorySection articles={articles} />
 
                 {hasMore && (
                   <div className="text-center mt-8">
