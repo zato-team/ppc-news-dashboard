@@ -22,7 +22,12 @@ interface Article {
   published_at: string;
 }
 
-export default function CategorySection({ articles }: { articles: Article[] }) {
+interface CategorySectionProps {
+  articles: Article[];
+  filterCategory: ArticleCategory | "all";
+}
+
+export default function CategorySection({ articles, filterCategory }: CategorySectionProps) {
   // Group articles by category
   const grouped: Record<ArticleCategory, Article[]> = {
     "google-merchant-center": [],
@@ -31,6 +36,7 @@ export default function CategorySection({ articles }: { articles: Article[] }) {
     "pmax": [],
     "dgen-display": [],
     "youtube-ads": [],
+    "microsoft-ads": [],
     "general-settings": [],
     "general-platform": [],
   };
@@ -38,6 +44,41 @@ export default function CategorySection({ articles }: { articles: Article[] }) {
   for (const article of articles) {
     const cat = detectCategory(article.title, article.summary, article.platform);
     grouped[cat].push(article);
+  }
+
+  // If a specific category is selected, only show that one
+  if (filterCategory !== "all") {
+    const items = grouped[filterCategory];
+    const icon = CATEGORY_ICONS[filterCategory];
+    const label = CATEGORY_LABELS[filterCategory];
+
+    return (
+      <div className="space-y-8">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{icon}</span>
+              <h3 className="text-base font-bold text-slate-800">{label}</h3>
+              <span className="text-xs font-semibold text-white bg-blue-500 px-2.5 py-0.5 rounded-full">
+                {items.length}
+              </span>
+            </div>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+          {items.length === 0 ? (
+            <div className="bg-slate-50 rounded-lg border border-dashed border-slate-200 py-8 text-center">
+              <p className="text-sm text-slate-400">No updates in this category</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {items.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   // Sort: categories with articles first (by count desc), empty ones at the bottom

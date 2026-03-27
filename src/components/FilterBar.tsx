@@ -1,10 +1,18 @@
 "use client";
 
-import { PLATFORM_LABELS, IMPACT_LABELS, IMPACT_COLORS, type Platform, type ImpactLevel } from "@/lib/sources";
+import {
+  CATEGORY_ORDER,
+  CATEGORY_LABELS,
+  CATEGORY_ICONS,
+  IMPACT_LABELS,
+  IMPACT_COLORS,
+  type ArticleCategory,
+  type ImpactLevel,
+} from "@/lib/sources";
 
 interface FilterBarProps {
-  platform: Platform | "all";
-  onPlatformChange: (p: Platform | "all") => void;
+  category: ArticleCategory | "all";
+  onCategoryChange: (c: ArticleCategory | "all") => void;
   impactLevel: ImpactLevel | "all";
   onImpactLevelChange: (i: ImpactLevel | "all") => void;
   search: string;
@@ -14,8 +22,8 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({
-  platform,
-  onPlatformChange,
+  category,
+  onCategoryChange,
   impactLevel,
   onImpactLevelChange,
   search,
@@ -25,35 +33,8 @@ export default function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-6 space-y-4">
-      {/* Top row: Platform + Search + Date */}
+      {/* Top row: Search + Date */}
       <div className="flex flex-col md:flex-row gap-4">
-        {/* Platform filter */}
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => onPlatformChange("all")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              platform === "all"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            All
-          </button>
-          {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => onPlatformChange(key as Platform)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                platform === key
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
         {/* Search */}
         <div className="flex-1">
           <input
@@ -79,7 +60,35 @@ export default function FilterBar({
         </select>
       </div>
 
-      {/* Bottom row: Impact level filter */}
+      {/* Category filter row */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => onCategoryChange("all")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            category === "all"
+              ? "bg-slate-900 text-white"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          All
+        </button>
+        {CATEGORY_ORDER.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => onCategoryChange(cat)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              category === cat
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <span className="text-sm leading-none">{CATEGORY_ICONS[cat]}</span>
+            {CATEGORY_LABELS[cat]}
+          </button>
+        ))}
+      </div>
+
+      {/* Impact level filter */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-medium text-slate-400 uppercase tracking-wider mr-1">
           Impact:

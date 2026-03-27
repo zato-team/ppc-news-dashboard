@@ -5,7 +5,7 @@ import StatsBar from "@/components/StatsBar";
 import FilterBar from "@/components/FilterBar";
 import TimelineChart from "@/components/TimelineChart";
 import CategorySection from "@/components/CategorySection";
-import type { Platform, ImpactLevel } from "@/lib/sources";
+import type { ArticleCategory, Platform, ImpactLevel } from "@/lib/sources";
 
 interface Article {
   id: number;
@@ -28,7 +28,7 @@ interface Stats {
 export default function Dashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [platform, setPlatform] = useState<Platform | "all">("all");
+  const [category, setCategory] = useState<ArticleCategory | "all">("all");
   const [impactLevel, setImpactLevel] = useState<ImpactLevel | "all">("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState("30");
@@ -44,7 +44,6 @@ export default function Dashboard() {
       const currentOffset = reset ? 0 : offset;
 
       const params = new URLSearchParams();
-      if (platform !== "all") params.set("platform", platform);
       if (impactLevel !== "all") params.set("impactLevel", impactLevel);
       if (search) params.set("search", search);
       if (dateRange !== "all") {
@@ -77,7 +76,7 @@ export default function Dashboard() {
       }
       setLoading(false);
     },
-    [platform, impactLevel, search, dateRange, offset]
+    [impactLevel, search, dateRange, offset]
   );
 
   const fetchStats = useCallback(async () => {
@@ -96,7 +95,7 @@ export default function Dashboard() {
     fetchArticles(true);
     fetchStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [platform, dateRange, impactLevel]);
+  }, [dateRange, impactLevel]);
 
   // Debounced search
   useEffect(() => {
@@ -241,9 +240,9 @@ export default function Dashboard() {
             )}
 
             <FilterBar
-              platform={platform}
-              onPlatformChange={(p) => {
-                setPlatform(p);
+              category={category}
+              onCategoryChange={(c) => {
+                setCategory(c);
                 setOffset(0);
               }}
               impactLevel={impactLevel}
@@ -263,7 +262,7 @@ export default function Dashboard() {
             {/* Timeline Chart */}
             <TimelineChart
               dateRange={dateRange}
-              platform={platform}
+              platform="all"
               impactLevel={impactLevel}
             />
 
@@ -294,7 +293,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                <CategorySection articles={articles} />
+                <CategorySection articles={articles} filterCategory={category} />
 
                 {hasMore && (
                   <div className="text-center mt-8">

@@ -7,6 +7,7 @@ export type ArticleCategory =
   | "pmax"
   | "dgen-display"
   | "youtube-ads"
+  | "microsoft-ads"
   | "general-settings"
   | "general-platform";
 
@@ -155,6 +156,7 @@ export const CATEGORY_ORDER: ArticleCategory[] = [
   "pmax",
   "dgen-display",
   "youtube-ads",
+  "microsoft-ads",
   "general-settings",
   "general-platform",
 ];
@@ -166,6 +168,7 @@ export const CATEGORY_LABELS: Record<ArticleCategory, string> = {
   "pmax": "PMax",
   "dgen-display": "DGen & Display (GDN)",
   "youtube-ads": "YouTube Ads",
+  "microsoft-ads": "Microsoft Ads",
   "general-settings": "General Settings Updates",
   "general-platform": "General Platform Updates",
 };
@@ -177,6 +180,7 @@ export const CATEGORY_ICONS: Record<ArticleCategory, string> = {
   "pmax": "⚡",
   "dgen-display": "📺",
   "youtube-ads": "▶️",
+  "microsoft-ads": "Ⓜ️",
   "general-settings": "⚙️",
   "general-platform": "📢",
 };
@@ -263,6 +267,22 @@ export const CATEGORY_KEYWORDS: Record<ArticleCategory, string[]> = {
     "shorts ad",
     "youtube shorts",
   ],
+  "microsoft-ads": [
+    "microsoft ads",
+    "microsoft advertising",
+    "bing ads",
+    "microsoft audience",
+    "microsoft shopping",
+    "microsoft copilot",
+    "microsoft performance max",
+    "microsoft pmax",
+    "bing shopping",
+    "microsoft merchant",
+    "microsoft campaign",
+    "microsoft search",
+    "xandr",
+    "microsoft native",
+  ],
   "general-settings": [
     "account setting",
     "billing",
@@ -290,6 +310,11 @@ export const CATEGORY_KEYWORDS: Record<ArticleCategory, string[]> = {
 
 export function detectCategory(title: string, summary: string, platform: Platform): ArticleCategory {
   const combined = `${title} ${summary}`.toLowerCase();
+
+  // Microsoft Ads platform articles default to that category
+  if (platform === "microsoft-ads") {
+    return "microsoft-ads";
+  }
 
   // Merchant Center platform articles default to that category
   if (platform === "merchant-center") {
