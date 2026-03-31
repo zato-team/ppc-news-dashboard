@@ -131,6 +131,7 @@ export async function fetchAllFeeds(): Promise<{
           source_name: source.name,
           platform,
           impact_level: impactLevel,
+          source_type: source.sourceType,
           published_at: publishedAt,
         });
 

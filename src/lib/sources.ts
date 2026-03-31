@@ -11,11 +11,14 @@ export type ArticleCategory =
   | "general-settings"
   | "general-platform";
 
+export type SourceType = "official" | "industry";
+
 export interface FeedSource {
   name: string;
   url: string;
   platform: Platform;
   type: "rss" | "atom";
+  sourceType: SourceType;
 }
 
 export const FEED_SOURCES: FeedSource[] = [
@@ -25,12 +28,14 @@ export const FEED_SOURCES: FeedSource[] = [
     url: "https://blog.google/products/ads-commerce/rss/",
     platform: "google-ads",
     type: "rss",
+    sourceType: "official",
   },
   {
     name: "Google Ads Developer Blog",
     url: "https://ads-developers.googleblog.com/feeds/posts/default",
     platform: "google-ads",
     type: "atom",
+    sourceType: "official",
   },
   // Google Merchant Center
   {
@@ -38,6 +43,7 @@ export const FEED_SOURCES: FeedSource[] = [
     url: "https://blog.google/products/shopping/rss/",
     platform: "merchant-center",
     type: "rss",
+    sourceType: "official",
   },
   // Microsoft Ads
   {
@@ -45,6 +51,7 @@ export const FEED_SOURCES: FeedSource[] = [
     url: "https://about.ads.microsoft.com/en-us/blog/rss",
     platform: "microsoft-ads",
     type: "rss",
+    sourceType: "official",
   },
   // Industry sources
   {
@@ -52,20 +59,27 @@ export const FEED_SOURCES: FeedSource[] = [
     url: "https://searchengineland.com/feed",
     platform: "google-ads",
     type: "rss",
+    sourceType: "industry",
   },
   {
     name: "PPC Hero",
     url: "https://www.ppchero.com/feed/",
     platform: "google-ads",
     type: "rss",
+    sourceType: "industry",
   },
   {
     name: "Search Engine Journal - PPC",
     url: "https://www.searchenginejournal.com/category/pay-per-click/feed/",
     platform: "google-ads",
     type: "rss",
+    sourceType: "industry",
   },
 ];
+
+export const OFFICIAL_SOURCE_NAMES = FEED_SOURCES
+  .filter((s) => s.sourceType === "official")
+  .map((s) => s.name);
 
 // Keywords to filter articles from industry sources (must match at least one)
 export const PLATFORM_KEYWORDS: Record<Platform, string[]> = {

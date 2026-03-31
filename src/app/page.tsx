@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import StatsBar from "@/components/StatsBar";
 import FilterBar from "@/components/FilterBar";
 import TimelineChart from "@/components/TimelineChart";
+import ContentOpportunities from "@/components/ContentOpportunities";
 import CategorySection from "@/components/CategorySection";
 import type { ArticleCategory, Platform, ImpactLevel } from "@/lib/sources";
 
@@ -265,6 +266,9 @@ export default function Dashboard() {
               platform="all"
               impactLevel={impactLevel}
             />
+
+            {/* Content Opportunities */}
+            <ContentOpportunities dateRange={dateRange} />
 
             {/* Articles by Category */}
             {loading ? (

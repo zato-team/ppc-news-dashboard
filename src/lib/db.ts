@@ -1,5 +1,5 @@
 import { sql } from "@vercel/postgres";
-import type { Platform, ImpactLevel } from "./sources";
+import type { Platform, ImpactLevel, SourceType } from "./sources";
 
 export interface Article {
   id: number;
@@ -9,6 +9,7 @@ export interface Article {
   source_name: string;
   platform: Platform;
   impact_level: ImpactLevel;
+  source_type: SourceType;
   published_at: string;
   fetched_at: string;
 }
@@ -51,14 +52,30 @@ export async function createTables() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_articles_impact ON articles(impact_level)
   `;
+
+  // Migration: add source_type column
+  const sourceTypeCheck = await sql`
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name = 'articles' AND column_name = 'source_type'
+  `;
+
+  if (sourceTypeCheck.rows.length === 0) {
+    await sql`ALTER TABLE articles ADD COLUMN source_type TEXT DEFAULT 'industry'`;
+    // Backfill official sources
+    await sql`UPDATE articles SET source_type = 'official' WHERE source_name IN ('Google Ads Blog', 'Google Ads Developer Blog', 'Google Merchant Center Blog', 'Microsoft Advertising Blog')`;
+  }
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_articles_source_type ON articles(source_type)
+  `;
 }
 
 export async function insertArticle(article: Omit<Article, "id" | "fetched_at">) {
   try {
     await sql`
-      INSERT INTO articles (title, url, summary, source_name, platform, impact_level, published_at)
-      VALUES (${article.title}, ${article.url}, ${article.summary}, ${article.source_name}, ${article.platform}, ${article.impact_level}, ${article.published_at})
-      ON CONFLICT (url) DO UPDATE SET impact_level = ${article.impact_level}
+      INSERT INTO articles (title, url, summary, source_name, platform, impact_level, source_type, published_at)
+      VALUES (${article.title}, ${article.url}, ${article.summary}, ${article.source_name}, ${article.platform}, ${article.impact_level}, ${article.source_type}, ${article.published_at})
+      ON CONFLICT (url) DO UPDATE SET impact_level = ${article.impact_level}, source_type = ${article.source_type}
     `;
     return true;
   } catch {
