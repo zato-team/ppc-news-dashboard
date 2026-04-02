@@ -8,6 +8,7 @@ import {
   type Platform,
   type ImpactLevel,
 } from "./sources";
+import { createDraftCampaign, isMailchimpConfigured } from "./mailchimp";
 import { format } from "date-fns";
 
 function getResend() {
@@ -165,11 +166,26 @@ export async function sendWeeklyDigest() {
   ).length;
   const subjectPrefix =
     actionCount > 0 ? `[${actionCount} ACTION REQUIRED] ` : "";
+  const subject = `${subjectPrefix}PPC News Digest — Week of ${weekOf} (${articles.length} updates)`;
+  const previewText = `${articles.length} PPC updates this week${actionCount > 0 ? ` — ${actionCount} require action` : ""}`;
 
+  // Use Mailchimp if configured — creates a DRAFT for human review before sending
+  if (isMailchimpConfigured()) {
+    const result = await createDraftCampaign(html, subject, previewText);
+    return {
+      provider: "mailchimp",
+      campaignId: result.campaignId,
+      archiveUrl: result.archiveUrl,
+      articleCount: articles.length,
+      note: "Draft created in Mailchimp — review and send manually from your Mailchimp dashboard",
+    };
+  }
+
+  // Fallback: send directly via Resend
   const { data, error } = await getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL || "PPC News <noreply@resend.dev>",
     to: [process.env.DIGEST_EMAIL || "info@zatomarketing.com"],
-    subject: `${subjectPrefix}PPC News Digest — Week of ${weekOf} (${articles.length} updates)`,
+    subject,
     html,
   });
 
@@ -177,5 +193,5 @@ export async function sendWeeklyDigest() {
     throw new Error(`Failed to send email: ${error.message}`);
   }
 
-  return { emailId: data?.id, articleCount: articles.length };
+  return { provider: "resend", emailId: data?.id, articleCount: articles.length };
 }
