@@ -1,7 +1,6 @@
 /**
  * Mailchimp Marketing API integration.
- * Creates a draft campaign — does NOT send it automatically.
- * A human reviews and clicks "Send" in the Mailchimp dashboard.
+ * Creates a campaign and sends it automatically.
  */
 
 interface MailchimpConfig {
@@ -36,7 +35,7 @@ function authHeader(apiKey: string): string {
   return `Basic ${encoded}`;
 }
 
-export async function createDraftCampaign(
+export async function createAndSendCampaign(
   html: string,
   subject: string,
   previewText: string
@@ -89,8 +88,16 @@ export async function createDraftCampaign(
     throw new Error(`Mailchimp set content failed: ${err.detail || JSON.stringify(err)}`);
   }
 
-  // NOTE: We intentionally do NOT call /actions/send — campaign stays as a draft.
-  // A human reviews in the Mailchimp dashboard and clicks Send manually.
+  // Step 3: Send the campaign
+  const sendRes = await fetch(`${baseUrl}/campaigns/${campaignId}/actions/send`, {
+    method: "POST",
+    headers,
+  });
+
+  if (!sendRes.ok) {
+    const err = await sendRes.json().catch(() => ({}));
+    throw new Error(`Mailchimp send failed: ${err.detail || JSON.stringify(err)}`);
+  }
 
   return { campaignId, webId, archiveUrl };
 }

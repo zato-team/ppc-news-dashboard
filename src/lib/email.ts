@@ -8,7 +8,7 @@ import {
   type Platform,
   type ImpactLevel,
 } from "./sources";
-import { createDraftCampaign, isMailchimpConfigured } from "./mailchimp";
+import { createAndSendCampaign, isMailchimpConfigured } from "./mailchimp";
 import { format } from "date-fns";
 
 function getResend() {
@@ -70,7 +70,7 @@ function buildEmailHtml(articles: Article[]): string {
     </head>
     <body>
       <div class="header">
-        <h1>PPC News Weekly Digest</h1>
+        <h1>Your Weekly PPC Platform Updates from ZATO</h1>
         <p>Week of ${weekOf} &mdash; ${articles.length} updates found</p>
       </div>
   `;
@@ -166,18 +166,18 @@ export async function sendWeeklyDigest() {
   ).length;
   const subjectPrefix =
     actionCount > 0 ? `[${actionCount} IMPORTANT UPDATE${actionCount > 1 ? "S" : ""}] ` : "";
-  const subject = `${subjectPrefix}PPC News Digest — Week of ${weekOf} (${articles.length} updates)`;
+  const subject = `${subjectPrefix}Your Weekly PPC Platform Updates from ZATO — ${weekOf} (${articles.length} updates)`;
   const previewText = `${articles.length} PPC updates this week${actionCount > 0 ? ` — ${actionCount} require action` : ""}`;
 
-  // Use Mailchimp if configured — creates a DRAFT for human review before sending
+  // Use Mailchimp if configured — sends automatically to the PPC Platform Updates audience
   if (isMailchimpConfigured()) {
-    const result = await createDraftCampaign(html, subject, previewText);
+    const result = await createAndSendCampaign(html, subject, previewText);
     return {
       provider: "mailchimp",
       campaignId: result.campaignId,
       archiveUrl: result.archiveUrl,
       articleCount: articles.length,
-      note: "Draft created in Mailchimp — review and send manually from your Mailchimp dashboard",
+      note: "Campaign sent via Mailchimp to PPC Platform Updates audience",
     };
   }
 
