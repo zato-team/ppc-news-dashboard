@@ -146,7 +146,7 @@ function buildEmailHtml(articles: Article[]): string {
 
   html += `
       <div class="footer">
-        <p>Sent by ZATO Marketing PPC News Dashboard</p>
+        <p>Sent by <a href="https://zatomarketing.com?utm_source=newsletter&utm_medium=email&utm_campaign=weekly_digest" style="color:#9ca3af;">ZATO Marketing</a></p>
         <p>This is an automated weekly digest of Google Ads, Microsoft Ads, and Google Merchant Center updates.</p>
       </div>
     </body>
