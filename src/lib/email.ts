@@ -87,7 +87,7 @@ function buildEmailHtml(articles: Article[]): string {
   if (actionRequired.length > 0) {
     html += `
       <div class="alert-section">
-        <h2 class="alert-title">&#9888; ${actionRequired.length} Action Required Update${actionRequired.length > 1 ? "s" : ""}</h2>
+        <h2 class="alert-title">&#9888; ${actionRequired.length} Important Update${actionRequired.length > 1 ? "s" : ""}</h2>
     `;
     for (const article of actionRequired) {
       const date = format(new Date(article.published_at), "MMM d, yyyy");
@@ -165,7 +165,7 @@ export async function sendWeeklyDigest() {
     (a) => a.impact_level === "action-required"
   ).length;
   const subjectPrefix =
-    actionCount > 0 ? `[${actionCount} ACTION REQUIRED] ` : "";
+    actionCount > 0 ? `[${actionCount} IMPORTANT UPDATE${actionCount > 1 ? "S" : ""}] ` : "";
   const subject = `${subjectPrefix}PPC News Digest — Week of ${weekOf} (${articles.length} updates)`;
   const previewText = `${articles.length} PPC updates this week${actionCount > 0 ? ` — ${actionCount} require action` : ""}`;
 

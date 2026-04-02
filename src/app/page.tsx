@@ -222,8 +222,8 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-red-900 font-semibold text-sm">
-                    {actionRequiredCount} Action Required{" "}
-                    {actionRequiredCount === 1 ? "update" : "updates"} in your
+                    {actionRequiredCount} Important{" "}
+                    {actionRequiredCount === 1 ? "Update" : "Updates"} in your
                     current view
                   </p>
                   <p className="text-red-700 text-xs mt-0.5">

@@ -132,7 +132,7 @@ export const PLATFORM_COLORS: Record<Platform, string> = {
 // --- Impact Level System ---
 
 export const IMPACT_LABELS: Record<ImpactLevel, string> = {
-  "action-required": "Action Required",
+  "action-required": "Important Update",
   "may-impact": "May Impact",
   "good-to-know": "Good to Know",
 };
