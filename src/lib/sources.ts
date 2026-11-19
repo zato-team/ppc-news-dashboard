@@ -9,7 +9,12 @@ export type ArticleCategory =
   | "youtube-ads"
   | "microsoft-ads"
   | "general-settings"
-  | "general-platform";
+  | "general-platform"
+  | "api-changes";
+
+// Feeds that are exclusively developer/API release notes — never PPC-team
+// content, so every article from them is routed straight into api-changes.
+export const API_ONLY_SOURCES: string[] = ["Google Ads Developer Blog"];
 
 export type SourceType = "official" | "industry";
 
@@ -173,6 +178,7 @@ export const CATEGORY_ORDER: ArticleCategory[] = [
   "microsoft-ads",
   "general-settings",
   "general-platform",
+  "api-changes",
 ];
 
 export const CATEGORY_LABELS: Record<ArticleCategory, string> = {
@@ -185,6 +191,7 @@ export const CATEGORY_LABELS: Record<ArticleCategory, string> = {
   "microsoft-ads": "Microsoft Ads",
   "general-settings": "General Settings Updates",
   "general-platform": "General Platform Updates",
+  "api-changes": "API Changes",
 };
 
 export const CATEGORY_ICONS: Record<ArticleCategory, string> = {
@@ -197,6 +204,7 @@ export const CATEGORY_ICONS: Record<ArticleCategory, string> = {
   "microsoft-ads": "Ⓜ️",
   "general-settings": "⚙️",
   "general-platform": "📢",
+  "api-changes": "🔌",
 };
 
 export const CATEGORY_KEYWORDS: Record<ArticleCategory, string[]> = {
@@ -312,18 +320,68 @@ export const CATEGORY_KEYWORDS: Record<ArticleCategory, string[]> = {
     "recommendation",
     "optimization score",
     "account structure",
-    "api change",
-    "api version",
     "editor",
     "scripts",
     "automated rule",
     "label",
   ],
   "general-platform": [],  // Fallback — catches everything else
+  "api-changes": [
+    "google ads api",
+    "adwords api",
+    "merchant api",
+    "content api",
+    "shopping content api",
+    "api version",
+    "api change",
+    "api update",
+    "api release",
+    "api deprecat",
+    "api sunset",
+    "api changelog",
+    "client library",
+    "developer blog",
+    "developer token",
+    "graphql",
+    "grpc",
+    "protobuf",
+    "oauth",
+    "webhook",
+    "rest api",
+    "soap api",
+    "google ads query language",
+    " gaql",
+    "mutate operation",
+    "resource name",
+    "python client",
+    "java client",
+    "php client",
+    ".net client",
+    "ruby client",
+    "sdk update",
+  ],
 };
 
-export function detectCategory(title: string, summary: string, platform: Platform): ArticleCategory {
+// api-changes is checked first in detectCategory so it wins regardless of platform.
+const KEYWORD_CHECK_ORDER = CATEGORY_ORDER.filter(
+  (cat) => cat !== "general-platform" && cat !== "api-changes"
+);
+
+export function detectCategory(
+  title: string,
+  summary: string,
+  platform: Platform,
+  sourceName?: string
+): ArticleCategory {
   const combined = `${title} ${summary}`.toLowerCase();
+
+  // Developer/API release notes are aimed at engineers, not the PPC team.
+  if (sourceName && API_ONLY_SOURCES.includes(sourceName)) {
+    return "api-changes";
+  }
+  if (CATEGORY_KEYWORDS["api-changes"].some((kw) => combined.includes(kw))) {
+    return "api-changes";
+  }
 
   // Microsoft Ads platform articles default to that category
   if (platform === "microsoft-ads") {
@@ -339,8 +397,7 @@ export function detectCategory(title: string, summary: string, platform: Platfor
   }
 
   // Check each category (in order) by keywords
-  for (const cat of CATEGORY_ORDER) {
-    if (cat === "general-platform") continue; // fallback, check last
+  for (const cat of KEYWORD_CHECK_ORDER) {
     const keywords = CATEGORY_KEYWORDS[cat];
     if (keywords.some((kw) => combined.includes(kw))) {
       return cat;

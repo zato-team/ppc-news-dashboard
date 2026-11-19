@@ -1,6 +1,6 @@
 import { sql } from "@vercel/postgres";
 import type { Article } from "./db";
-import type { ImpactLevel } from "./sources";
+import { API_ONLY_SOURCES, type ImpactLevel } from "./sources";
 
 export type OpportunityTier = "gold" | "silver" | "saturated";
 
@@ -94,7 +94,10 @@ export async function findOpportunities(days: number): Promise<Opportunity[]> {
     AND published_at >= ${startDate.toISOString()}
     ORDER BY published_at DESC
   `;
-  const officialArticles = officialResult.rows as Article[];
+  // Developer/API release notes aren't blog-topic material for the PPC content team.
+  const officialArticles = (officialResult.rows as Article[]).filter(
+    (a) => !API_ONLY_SOURCES.includes(a.source_name)
+  );
 
   // Get industry articles in expanded range
   const industryResult = await sql`

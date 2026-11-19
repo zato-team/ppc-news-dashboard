@@ -226,7 +226,7 @@ export default function ContentOpportunities({ dateRange }: ContentOpportunities
 function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
   const { article, coverageCount, tier, daysSincePublished, matchedArticleTitles } = opportunity;
   const config = TIER_CONFIG[tier];
-  const category = detectCategory(article.title, article.summary, article.platform as Platform);
+  const category = detectCategory(article.title, article.summary, article.platform as Platform, article.source_name);
   const [showMatches, setShowMatches] = useState(false);
 
   return (
