@@ -72,7 +72,7 @@ export default function FilterBar({
         >
           All
         </button>
-        {CATEGORY_ORDER.map((cat) => (
+        {CATEGORY_ORDER.filter((cat) => cat !== "api-changes").map((cat) => (
           <button
             key={cat}
             onClick={() => onCategoryChange(cat)}
@@ -86,6 +86,20 @@ export default function FilterBar({
             {CATEGORY_LABELS[cat]}
           </button>
         ))}
+
+        {/* Separated + muted: API changes are developer content, not a PPC category */}
+        <div className="w-px bg-slate-200 mx-1 self-stretch" />
+        <button
+          onClick={() => onCategoryChange("api-changes")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+            category === "api-changes"
+              ? "bg-slate-500 text-white"
+              : "bg-white text-slate-400 border border-dashed border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          <span className="text-sm leading-none grayscale opacity-70">{CATEGORY_ICONS["api-changes"]}</span>
+          {CATEGORY_LABELS["api-changes"]}
+        </button>
       </div>
 
       {/* Impact level filter */}

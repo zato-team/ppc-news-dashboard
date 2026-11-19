@@ -39,10 +39,11 @@ export default function CategorySection({ articles, filterCategory }: CategorySe
     "microsoft-ads": [],
     "general-settings": [],
     "general-platform": [],
+    "api-changes": [],
   };
 
   for (const article of articles) {
-    const cat = detectCategory(article.title, article.summary, article.platform);
+    const cat = detectCategory(article.title, article.summary, article.platform, article.source_name);
     grouped[cat].push(article);
   }
 
@@ -81,8 +82,12 @@ export default function CategorySection({ articles, filterCategory }: CategorySe
     );
   }
 
+  // API changes get their own pinned section at the very bottom, outside the PPC sort.
+  const apiChanges = grouped["api-changes"];
+  const ppcCategoryOrder = CATEGORY_ORDER.filter((cat) => cat !== "api-changes");
+
   // Sort: categories with articles first (by count desc), empty ones at the bottom
-  const sortedCategories = [...CATEGORY_ORDER].sort((a, b) => {
+  const sortedCategories = [...ppcCategoryOrder].sort((a, b) => {
     const aCount = grouped[a].length;
     const bCount = grouped[b].length;
     // Both have articles or both empty → keep relative order by count
@@ -151,6 +156,32 @@ export default function CategorySection({ articles, filterCategory }: CategorySe
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* API Changes — pinned at the very bottom, set apart from PPC content */}
+      {apiChanges.length > 0 && (
+        <div className="pt-8 mt-8 border-t-2 border-dashed border-slate-200">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center gap-2">
+              <span className="text-lg grayscale opacity-70">{CATEGORY_ICONS["api-changes"]}</span>
+              <h3 className="text-base font-bold text-slate-500">
+                {CATEGORY_LABELS["api-changes"]}
+              </h3>
+              <span className="text-xs font-semibold text-white bg-slate-400 px-2.5 py-0.5 rounded-full">
+                {apiChanges.length}
+              </span>
+            </div>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Backend &amp; developer-facing API updates — technical changes, not typically campaign content.
+          </p>
+          <div className="space-y-4 opacity-90">
+            {apiChanges.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
         </div>
       )}
     </div>
